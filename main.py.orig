@@ -6,8 +6,11 @@ from langchain.llms import HuggingFaceHub
 import pinecone
 from dotenv import load_dotenv
 import os
+from langchain import PromptTemplate
+from langchain.schema.runnable import RunnablePassthrough
+from langchain.schema.output_parser import StrOutputParser
 
-class ChatBot():
+class ChatBot:
     def __init__(self):
         load_dotenv()
         self.loader = TextLoader('./horoscope.txt')
@@ -30,27 +33,24 @@ class ChatBot():
         else:
             self.docsearch = Pinecone.from_existing_index(self.index_name, self.embeddings)
 
-        self.repo_id = "mistralai/Mixtral-8x7B-Instruct-v0.1"
+        repo_id = "facebook/bart-large-cnn"  # Replace with a different model for testing
         self.llm = HuggingFaceHub(
-            repo_id=self.repo_id, 
-            model_kwargs={"temperature": 0.8, "top_p": 0.8, "top_k": 50}, 
+            repo_id=repo_id,
+            model_kwargs={"temperature": 0.8, "top_p": 0.8, "top_k": 50},
             huggingfacehub_api_token=os.getenv('HUGGINGFACE_API_KEY')
         )
 
-        from langchain import PromptTemplate
-
-        self.template = """
-        Welcome to Laitkor Consultancy Services, I am tying to provide answer for your queries about Devops.
+        template = """
+        You are a seer. These Human will ask you questions about Dev Ops. Use the following piece of context to answer the question.
+        If you don't know the answer, just say you don't know.
+        You answer with a short and concise answer, no longer than 2 sentences.
 
         Context: {context}
         Question: {question}
-        Answer:
+        Answer: 
+
         """
-
-        self.prompt = PromptTemplate(template=self.template, input_variables=["context", "question"])
-
-        from langchain.schema.runnable import RunnablePassthrough
-        from langchain.schema.output_parser import StrOutputParser
+        self.prompt = PromptTemplate(template=template, input_variables=["context", "question"])
 
         self.rag_chain = (
             {"context": self.docsearch.as_retriever(), "question": RunnablePassthrough()}
@@ -58,4 +58,7 @@ class ChatBot():
             | self.llm
             | StrOutputParser()
         )
+
+    def ask_question(self, question):
+        return self.rag_chain.invoke(question)
 

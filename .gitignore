@@ -1,2 +1,15 @@
-.venv
+.myvenv
 .env
+
+__pycache__
+
+venv/
+myenv/
+
+
+nohup.out
+*.log
+
+.env
+
+
