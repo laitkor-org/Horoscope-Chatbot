@@ -40,8 +40,8 @@ class ChatBot():
         from langchain import PromptTemplate
 
         self.template = """
-        Welcome to Laitkor Consultancy Services, I am tying to provide answer for your queries about Devops.
-
+        Welcome to Laitkor Consultancy Services. I am here to provide answers to your queries about DevOps.
+	
         Context: {context}
         Question: {question}
         Answer:
